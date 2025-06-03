@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Toast } from "@/components/ui/toast"
 import { Calendar as CalendarUI } from "@/components/ui/calendar"
 import {
   type EmotionEntry,
@@ -305,7 +304,17 @@ export default function EmotionCalendar() {
         </button>
 
         {/* 토스트 메시지 */}
-        {toast && <Toast message={toast.message} type={toast.type} />}
+        {toast && (
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+            <div
+              className={`px-4 py-3 rounded-lg shadow-lg text-white font-medium ${
+                toast.type === "error" ? "bg-red-500" : "bg-green-500"
+              }`}
+            >
+              {toast.message}
+            </div>
+          </div>
+        )}
       </div>
     )
   }
@@ -488,7 +497,17 @@ export default function EmotionCalendar() {
         </div>
 
         {/* 토스트 메시지 */}
-        {toast && <Toast message={toast.message} type={toast.type} />}
+        {toast && (
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+            <div
+              className={`px-4 py-3 rounded-lg shadow-lg text-white font-medium ${
+                toast.type === "error" ? "bg-red-500" : "bg-green-500"
+              }`}
+            >
+              {toast.message}
+            </div>
+          </div>
+        )}
       </div>
     )
   }
@@ -608,7 +627,17 @@ export default function EmotionCalendar() {
         </div>
 
         {/* 토스트 메시지 */}
-        {toast && <Toast message={toast.message} type={toast.type} />}
+        {toast && (
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+            <div
+              className={`px-4 py-3 rounded-lg shadow-lg text-white font-medium ${
+                toast.type === "error" ? "bg-red-500" : "bg-green-500"
+              }`}
+            >
+              {toast.message}
+            </div>
+          </div>
+        )}
       </div>
     )
   }
