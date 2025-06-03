@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from "react"
-import { format } from "date-fns"
 import { Plus, Calendar, Heart, Frown, Angry, FileText, ArrowLeft, Edit3, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,9 +19,17 @@ import {
   MOOD_CONFIG,
 } from "@/lib/utils"
 
+// 날짜 포맷팅 함수 (date-fns 대신)
+const formatDate = (date: Date, formatStr: string): string => {
+  if (formatStr === "yyyy-MM-dd") {
+    return date.toISOString().split("T")[0]
+  }
+  return date.toLocaleDateString("ko-KR")
+}
+
 export default function EmotionCalendar() {
   const [entries, setEntries] = useState<EmotionEntry[]>([])
-  const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"))
+  const [selectedDate, setSelectedDate] = useState(formatDate(new Date(), "yyyy-MM-dd"))
   const [searchTerm, setSearchTerm] = useState("")
   const [currentEntry, setCurrentEntry] = useState({
     grateful: "",
@@ -137,7 +144,7 @@ export default function EmotionCalendar() {
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return
 
-    const formattedDate = format(date, "yyyy-MM-dd")
+    const formattedDate = formatDate(date, "yyyy-MM-dd")
     setSelectedDate(formattedDate)
 
     const existingEntry = entries.find((entry) => entry.date === formattedDate)
@@ -175,7 +182,7 @@ export default function EmotionCalendar() {
               </div>
             </div>
 
-            {entries.find((entry) => entry.date === format(new Date(), "yyyy-MM-dd")) ? (
+            {entries.find((entry) => entry.date === formatDate(new Date(), "yyyy-MM-dd")) ? (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-white rounded-full"></div>
@@ -185,7 +192,7 @@ export default function EmotionCalendar() {
                   variant="outline"
                   className="w-full bg-white/20 border-white/30 text-white hover:bg-white/30"
                   onClick={() => {
-                    const todayEntry = entries.find((entry) => entry.date === format(new Date(), "yyyy-MM-dd"))
+                    const todayEntry = entries.find((entry) => entry.date === formatDate(new Date(), "yyyy-MM-dd"))
                     if (todayEntry) {
                       setViewingEntry(todayEntry)
                       setCurrentScreen("view")
@@ -204,7 +211,7 @@ export default function EmotionCalendar() {
                 <Button
                   className="w-full bg-white text-blue-600 hover:bg-blue-50"
                   onClick={() => {
-                    setSelectedDate(format(new Date(), "yyyy-MM-dd"))
+                    setSelectedDate(formatDate(new Date(), "yyyy-MM-dd"))
                     setCurrentScreen("entry")
                   }}
                 >
@@ -324,7 +331,7 @@ export default function EmotionCalendar() {
               className="mx-auto"
               modifiers={{
                 hasEntry: (date) => {
-                  const formatted = format(date, "yyyy-MM-dd")
+                  const formatted = formatDate(date, "yyyy-MM-dd")
                   return entryDates.includes(formatted)
                 },
               }}

@@ -1,7 +1,5 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { format, parse } from "date-fns"
-import { ko } from "date-fns/locale"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -35,10 +33,15 @@ export const getMoodEmoji = (mood = 3): string => {
   return moodConfig?.emoji || "😐"
 }
 
-// 날짜 포맷팅
+// 날짜 포맷팅 (date-fns 대신 내장 함수 사용)
 export const formatDisplayDate = (dateString: string): string => {
-  const date = parse(dateString, "yyyy-MM-dd", new Date())
-  return format(date, "M월 d일 (E)", { locale: ko })
+  const date = new Date(dateString)
+  const options: Intl.DateTimeFormatOptions = {
+    month: "long",
+    day: "numeric",
+    weekday: "short",
+  }
+  return date.toLocaleDateString("ko-KR", options)
 }
 
 // 주간 통계 계산
