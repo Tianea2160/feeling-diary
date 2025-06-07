@@ -1,4 +1,4 @@
-// 토큰 관리 유틸리티 (개선된 버전)
+// 토큰 관리 유틸리티
 import { refreshTokenApi } from "@/lib/api"
 
 // 사용자 정보 타입 정의
@@ -108,7 +108,7 @@ export const saveAuthData = (authResponse: AuthResponse) => {
   setUser(authResponse.user)
 }
 
-// 토큰 갱신 함수 (개선된 버전)
+// 토큰 갱신 함수
 export const refreshAccessToken = async (): Promise<boolean> => {
   const refreshToken = getRefreshToken()
 

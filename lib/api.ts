@@ -1,6 +1,5 @@
-// API 호출 유틸리티 (환경 설정 적용)
+// API 호출 유틸리티
 import { getAuthHeaders, refreshAccessToken, logout } from "@/lib/auth"
-import { mockLogin, mockRegister, mockRefreshToken } from "@/lib/api-mock"
 import { CONFIG } from "@/lib/config"
 
 /**
@@ -53,11 +52,7 @@ export const handleApiError = (error: unknown): string => {
   console.error("API 오류:", error)
 
   if (error instanceof TypeError && error.message === "Failed to fetch") {
-    if (CONFIG.isDevelopment) {
-      return "서버에 연결할 수 없습니다. 목업 모드로 전환하거나 네트워크 연결을 확인해주세요."
-    } else {
-      return "서버에 연결할 수 없습니다. 네트워크 연결을 확인하거나 잠시 후 다시 시도해주세요."
-    }
+    return "서버에 연결할 수 없습니다. 네트워크 연결을 확인하거나 잠시 후 다시 시도해주세요."
   } else if (error instanceof DOMException && error.name === "AbortError") {
     return "요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요."
   } else {
@@ -78,84 +73,45 @@ export const API_ENDPOINTS = {
  * 로그인 API 호출
  */
 export const loginApi = async (email: string, password: string) => {
-  if (CONFIG.apiMode === "mock") {
-    return await mockLogin(email, password)
-  }
+  const response = await fetchWithTimeout(API_ENDPOINTS.LOGIN, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, password }),
+  })
 
-  try {
-    const response = await fetchWithTimeout(API_ENDPOINTS.LOGIN, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-    })
-
-    return await handleApiResponse(response)
-  } catch (error) {
-    // 개발 환경에서만 목업으로 폴백
-    if (CONFIG.isDevelopment) {
-      console.warn("실제 API 호출 실패, 목업 모드로 전환:", error)
-      return await mockLogin(email, password)
-    }
-    throw error
-  }
+  return await handleApiResponse(response)
 }
 
 /**
  * 회원가입 API 호출
  */
 export const registerApi = async (email: string, name: string, password: string) => {
-  if (CONFIG.apiMode === "mock") {
-    return await mockRegister(email, name, password)
-  }
+  const response = await fetchWithTimeout(API_ENDPOINTS.REGISTER, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, name, password }),
+  })
 
-  try {
-    const response = await fetchWithTimeout(API_ENDPOINTS.REGISTER, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, name, password }),
-    })
-
-    return await handleApiResponse(response)
-  } catch (error) {
-    // 개발 환경에서만 목업으로 폴백
-    if (CONFIG.isDevelopment) {
-      console.warn("실제 API 호출 실패, 목업 모드로 전환:", error)
-      return await mockRegister(email, name, password)
-    }
-    throw error
-  }
+  return await handleApiResponse(response)
 }
 
 /**
  * 토큰 갱신 API 호출
  */
 export const refreshTokenApi = async (refreshToken: string) => {
-  if (CONFIG.apiMode === "mock") {
-    return await mockRefreshToken(refreshToken)
-  }
+  const response = await fetchWithTimeout(API_ENDPOINTS.REFRESH, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ refreshToken }),
+  })
 
-  try {
-    const response = await fetchWithTimeout(API_ENDPOINTS.REFRESH, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ refreshToken }),
-    })
-
-    return await handleApiResponse(response)
-  } catch (error) {
-    // 개발 환경에서만 목업으로 폴백
-    if (CONFIG.isDevelopment) {
-      console.warn("실제 API 호출 실패, 목업 모드로 전환:", error)
-      return await mockRefreshToken(refreshToken)
-    }
-    throw error
-  }
+  return await handleApiResponse(response)
 }
 
 /**

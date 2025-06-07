@@ -10,10 +10,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Toast, useToast } from "@/components/ui/toast"
-import { DevInfo } from "@/components/dev-info"
 
 // API 함수 import
-import { registerApi } from "@/lib/api"
+import { registerApi, handleApiError } from "@/lib/api"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -79,7 +78,6 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
-      // 개선된 API 호출
       await registerApi(formData.email, formData.name, formData.password)
 
       showToast("회원가입이 완료되었습니다!", "success")
@@ -88,8 +86,7 @@ export default function RegisterPage() {
         router.push("/login?registered=true")
       }, 1000)
     } catch (error) {
-      console.error("회원가입 오류:", error)
-      setApiError(error instanceof Error ? error.message : "회원가입 중 오류가 발생했습니다")
+      setApiError(handleApiError(error))
     } finally {
       setLoading(false)
     }
@@ -110,9 +107,6 @@ export default function RegisterPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">환영합니다!</h2>
           <p className="text-gray-600">계정을 생성하고 감정 기록을 시작하세요</p>
         </div>
-
-        {/* 개발 모드 안내 - 개발 환경에서만 표시 */}
-        <DevInfo type="register" className="mb-6" />
 
         {apiError && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">{apiError}</div>

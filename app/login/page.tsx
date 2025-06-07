@@ -10,10 +10,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Toast, useToast } from "@/components/ui/toast"
-import { DevInfo } from "@/components/dev-info"
 
 // API 함수 import
-import { loginApi } from "@/lib/api"
+import { loginApi, handleApiError } from "@/lib/api"
 import { saveAuthData } from "@/lib/auth"
 
 export default function LoginPage() {
@@ -61,7 +60,6 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      // 개선된 API 호출
       const authResponse = await loginApi(formData.email, formData.password)
 
       // 인증 데이터 저장
@@ -74,8 +72,7 @@ export default function LoginPage() {
         router.push("/")
       }, 1000)
     } catch (error) {
-      console.error("로그인 오류:", error)
-      setError(error instanceof Error ? error.message : "로그인 중 오류가 발생했습니다")
+      setError(handleApiError(error))
     } finally {
       setLoading(false)
     }
@@ -96,9 +93,6 @@ export default function LoginPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">다시 만나서 반가워요!</h2>
           <p className="text-gray-600">계정에 로그인하고 감정 기록을 이어가세요</p>
         </div>
-
-        {/* 개발 모드 안내 - 개발 환경에서만 표시 */}
-        <DevInfo type="login" className="mb-6" />
 
         {successMessage && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-600 text-sm">
