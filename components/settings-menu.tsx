@@ -66,8 +66,7 @@ export function SettingsMenu() {
   }
 
   const handleProfile = () => {
-    // TODO: 프로필 페이지 구현 후 연결
-    console.log("프로필 페이지로 이동")
+    router.push("/profile")
   }
 
   const handleSettings = () => {
