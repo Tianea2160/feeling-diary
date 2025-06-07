@@ -1,5 +1,5 @@
-// API 호출 유틸리티 (디버깅 및 오류 처리 개선)
-import { getAuthHeaders, refreshAccessToken, logout } from "@/lib/auth"
+// API 호출 유틸리티 (개선된 오류 처리)
+import { getAuthHeaders, refreshAccessToken, logout, isLoggedIn } from "@/lib/auth"
 import { CONFIG } from "@/lib/config"
 
 /**
@@ -10,12 +10,14 @@ export const fetchWithTimeout = async (url: string, options: RequestInit = {}, t
   const id = setTimeout(() => controller.abort(), timeout)
 
   try {
-    console.log(`API 요청: ${options.method || "GET"} ${url}`, options.body ? JSON.parse(options.body as string) : "")
+    console.log(`API 요청: ${options.method || "GET"} ${url}`)
+    if (options.body) {
+      console.log("요청 데이터:", JSON.parse(options.body as string))
+    }
 
     const response = await fetch(url, {
       ...options,
       signal: controller.signal,
-      // CORS 문제 해결을 위한 설정 추가
       credentials: "include",
       mode: "cors",
     })
@@ -31,40 +33,65 @@ export const fetchWithTimeout = async (url: string, options: RequestInit = {}, t
 }
 
 /**
- * API 응답 처리 함수
+ * API 응답 처리 함수 (개선된 버전)
  */
 export const handleApiResponse = async (response: Response) => {
+  // 404 응답은 특별 처리 (기록 없음으로 간주)
+  if (response.status === 404) {
+    console.log("API 응답: 404 - 리소스를 찾을 수 없음 (정상 처리)")
+    return { success: false, data: null, message: "리소스를 찾을 수 없습니다." }
+  }
+
+  // 500번대 서버 에러는 안전하게 처리
+  if (response.status >= 500) {
+    console.error(`API 응답: ${response.status} - 서버 내부 오류`)
+    return { success: false, data: null, message: "서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요." }
+  }
+
   const contentType = response.headers.get("content-type")
 
   try {
+    // JSON 응답 처리
     if (contentType && contentType.includes("application/json")) {
       const data = await response.json()
       console.log("API 응답 데이터:", data)
 
       if (!response.ok) {
-        throw new Error(data.message || `API 오류: ${response.status}`)
+        const errorMessage = data.message || data.error || `HTTP ${response.status}: ${response.statusText}`
+        throw new Error(errorMessage)
       }
 
       return data
-    } else {
-      if (!response.ok) {
-        const text = await response.text()
-        console.error("API 오류 응답:", text)
-        throw new Error(`API 오류: ${response.status}`)
-      }
-
+    }
+    // 텍스트 응답 처리
+    else {
       const text = await response.text()
       console.log("API 텍스트 응답:", text)
-      return text
+
+      if (!response.ok) {
+        const errorMessage = text || `HTTP ${response.status}: ${response.statusText}`
+        console.error("API 오류 응답:", errorMessage)
+        throw new Error(errorMessage)
+      }
+
+      // 빈 응답이면 성공으로 처리
+      return text || { success: true }
     }
   } catch (error) {
     console.error("응답 처리 오류:", error)
+
+    // JSON 파싱 오류인 경우
+    if (error instanceof SyntaxError) {
+      console.error("JSON 파싱 실패, 서버 응답이 올바르지 않음")
+      return { success: false, data: null, message: "서버 응답 형식이 올바르지 않습니다." }
+    }
+
     throw error
   }
 }
 
 /**
- * API 오류 처리 함수
+ * API 오류 처리 함수 (개선된 버전)
  */
 export const handleApiError = (error: unknown): string => {
   console.error("API 오류:", error)
@@ -73,8 +100,14 @@ export const handleApiError = (error: unknown): string => {
     return "서버에 연결할 수 없습니다. 네트워크 연결을 확인하거나 잠시 후 다시 시도해주세요."
   } else if (error instanceof DOMException && error.name === "AbortError") {
     return "요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요."
+  } else if (error instanceof Error) {
+    // 구체적인 에러 메시지가 있으면 그대로 사용
+    if (error.message.includes("HTTP")) {
+      return error.message
+    }
+    return error.message || "요청 처리 중 오류가 발생했습니다."
   } else {
-    return error instanceof Error ? error.message : "요청 처리 중 오류가 발생했습니다."
+    return "알 수 없는 오류가 발생했습니다."
   }
 }
 
@@ -94,7 +127,7 @@ export const API_ENDPOINTS = {
   // Records
   RECORDS: `${CONFIG.apiBaseUrl}/api/records`,
   RECORD_BY_ID: (id: number) => `${CONFIG.apiBaseUrl}/api/records/${id}`,
-  RECORD_BY_DATE: (date: string) => `${CONFIG.apiBaseUrl}/api/records/${date}`,
+  RECORD_BY_DATE: (date: string) => `${CONFIG.apiBaseUrl}/api/records/date/${date}`,
   RECORD_DETAIL: (id: number) => `${CONFIG.apiBaseUrl}/api/records/detail/${id}`,
   RECORDS_SEARCH: `${CONFIG.apiBaseUrl}/api/records/search`,
 
@@ -111,7 +144,7 @@ export const API_ENDPOINTS = {
 }
 
 /**
- * 로그인 API 호출 (개선된 버전)
+ * 로그인 API 호출
  */
 export const loginApi = async (email: string, password: string) => {
   try {
@@ -131,7 +164,7 @@ export const loginApi = async (email: string, password: string) => {
 }
 
 /**
- * 회원가입 API 호출 (개선된 버전)
+ * 회원가입 API 호출
  */
 export const registerApi = async (email: string, name: string, password: string) => {
   try {
@@ -179,6 +212,11 @@ export const fetchApi = async (
   withAuth = true,
   timeout = 10000,
 ): Promise<any> => {
+  // 인증이 필요한데 로그인하지 않은 경우
+  if (withAuth && !isLoggedIn()) {
+    throw new Error("로그인이 필요합니다.")
+  }
+
   const headers = {
     "Content-Type": "application/json",
     ...(withAuth ? getAuthHeaders() : {}),
@@ -206,7 +244,6 @@ export const fetchApi = async (
       } else {
         console.log("토큰 갱신 실패, 로그아웃 처리")
         logout()
-        window.location.href = "/login?expired=true"
         throw new Error("인증이 만료되었습니다. 다시 로그인해주세요.")
       }
     }
@@ -218,4 +255,108 @@ export const fetchApi = async (
   }
 }
 
-// 나머지 API 함수들은 그대로 유지...
+/**
+ * 감정 기록 관련 API 함수들
+ */
+
+// 기록 목록 조회
+export const getRecordsApi = async (limit = 50, offset = 0) => {
+  if (!isLoggedIn()) {
+    throw new Error("로그인이 필요합니다.")
+  }
+
+  const url = `${API_ENDPOINTS.RECORDS}?limit=${limit}&offset=${offset}`
+  return fetchApi(url, { method: "GET" }, true)
+}
+
+// 특정 날짜 기록 조회
+export const getRecordByDateApi = async (date: string) => {
+  if (!isLoggedIn()) {
+    throw new Error("로그인이 필요합니다.")
+  }
+
+  try {
+    const response = await fetchApi(API_ENDPOINTS.RECORD_BY_DATE(date), { method: "GET" }, true)
+    return response
+  } catch (error) {
+    console.error(`날짜 ${date} 기록 조회 중 오류:`, error)
+
+    // 모든 에러를 기록 없음으로 처리 (UI 중단 방지)
+    return { success: false, data: null, message: "기록을 불러올 수 없습니다." }
+  }
+}
+
+// 새 기록 생성
+export const createRecordApi = async (recordData: any) => {
+  if (!isLoggedIn()) {
+    throw new Error("로그인이 필요합니다.")
+  }
+
+  return fetchApi(
+    API_ENDPOINTS.RECORDS,
+    {
+      method: "POST",
+      body: JSON.stringify(recordData),
+    },
+    true,
+  )
+}
+
+// 기록 수정
+export const updateRecordApi = async (id: number, recordData: any) => {
+  if (!isLoggedIn()) {
+    throw new Error("로그인이 필요합니다.")
+  }
+
+  return fetchApi(
+    API_ENDPOINTS.RECORD_BY_ID(id),
+    {
+      method: "PUT",
+      body: JSON.stringify(recordData),
+    },
+    true,
+  )
+}
+
+// 기록 삭제
+export const deleteRecordApi = async (id: number) => {
+  if (!isLoggedIn()) {
+    throw new Error("로그인이 필요합니다.")
+  }
+
+  return fetchApi(
+    API_ENDPOINTS.RECORD_BY_ID(id),
+    {
+      method: "DELETE",
+    },
+    true,
+  )
+}
+
+// 기록 검색
+export const searchRecordsApi = async (params: {
+  q?: string
+  date_from?: string
+  date_to?: string
+}) => {
+  if (!isLoggedIn()) {
+    throw new Error("로그인이 필요합니다.")
+  }
+
+  const searchParams = new URLSearchParams()
+  if (params.q) searchParams.append("q", params.q)
+  if (params.date_from) searchParams.append("date_from", params.date_from)
+  if (params.date_to) searchParams.append("date_to", params.date_to)
+
+  const url = `${API_ENDPOINTS.RECORDS_SEARCH}?${searchParams.toString()}`
+  return fetchApi(url, { method: "GET" }, true)
+}
+
+// 캘린더 데이터 조회
+export const getCalendarDataApi = async (year: number, month: number) => {
+  if (!isLoggedIn()) {
+    throw new Error("로그인이 필요합니다.")
+  }
+
+  return fetchApi(API_ENDPOINTS.CALENDAR(year, month), { method: "GET" }, true)
+}
