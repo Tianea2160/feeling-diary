@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Calendar as CalendarUI } from "@/components/ui/calendar"
+import { SettingsMenu } from "@/components/settings-menu"
 import {
   type EmotionEntry,
   getMoodEmoji,
@@ -161,9 +162,12 @@ export default function EmotionCalendar() {
       <div className="min-h-screen bg-gray-50">
         {/* 헤더 */}
         <div className="bg-white px-4 py-6 shadow-sm">
-          <div className="max-w-md mx-auto">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">안녕하세요! 👋</h1>
-            <p className="text-gray-600">오늘 하루는 어떠셨나요?</p>
+          <div className="max-w-md mx-auto flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">안녕하세요! 👋</h1>
+              <p className="text-gray-600">오늘 하루는 어떠셨나요?</p>
+            </div>
+            <SettingsMenu />
           </div>
         </div>
 
@@ -324,11 +328,14 @@ export default function EmotionCalendar() {
     return (
       <div className="min-h-screen bg-gray-50">
         {/* 헤더 */}
-        <div className="bg-white px-4 py-4 flex items-center gap-3 shadow-sm">
-          <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setCurrentScreen("main")}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <h1 className="text-lg font-semibold text-gray-900">캘린더</h1>
+        <div className="bg-white px-4 py-4 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setCurrentScreen("main")}>
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <h1 className="text-lg font-semibold text-gray-900">캘린더</h1>
+          </div>
+          <SettingsMenu />
         </div>
 
         <div className="px-4 py-6 max-w-md mx-auto">
@@ -368,14 +375,17 @@ export default function EmotionCalendar() {
     return (
       <div className="min-h-screen bg-gray-50">
         {/* 헤더 */}
-        <div className="bg-white px-4 py-4 flex items-center gap-3 shadow-sm">
-          <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setCurrentScreen("main")}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900">감정 기록</h1>
-            <p className="text-sm text-gray-500">{formatDisplayDate(selectedDate)}</p>
+        <div className="bg-white px-4 py-4 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setCurrentScreen("main")}>
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div>
+              <h1 className="text-lg font-semibold text-gray-900">감정 기록</h1>
+              <p className="text-sm text-gray-500">{formatDisplayDate(selectedDate)}</p>
+            </div>
           </div>
+          <SettingsMenu />
         </div>
 
         <div className="px-4 py-6 max-w-md mx-auto space-y-4">
@@ -527,17 +537,20 @@ export default function EmotionCalendar() {
               <p className="text-sm text-gray-500">{formatDisplayDate(viewingEntry.date)}</p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full"
-            onClick={() => {
-              setSelectedDate(viewingEntry.date)
-              setCurrentScreen("entry")
-            }}
-          >
-            <Edit3 className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={() => {
+                setSelectedDate(viewingEntry.date)
+                setCurrentScreen("entry")
+              }}
+            >
+              <Edit3 className="w-5 h-5" />
+            </Button>
+            <SettingsMenu />
+          </div>
         </div>
 
         <div className="px-4 py-6 max-w-md mx-auto space-y-4">
