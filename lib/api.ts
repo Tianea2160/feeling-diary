@@ -127,7 +127,7 @@ export const API_ENDPOINTS = {
   // Records
   RECORDS: `${CONFIG.apiBaseUrl}/api/records`,
   RECORD_BY_ID: (id: number) => `${CONFIG.apiBaseUrl}/api/records/${id}`,
-  RECORD_BY_DATE: (date: string) => `${CONFIG.apiBaseUrl}/api/records/date/${date}`,
+  RECORD_BY_DATE: (date: string) => `${CONFIG.apiBaseUrl}/api/records/${date}`,
   RECORD_DETAIL: (id: number) => `${CONFIG.apiBaseUrl}/api/records/detail/${id}`,
   RECORDS_SEARCH: `${CONFIG.apiBaseUrl}/api/records/search`,
 
