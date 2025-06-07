@@ -14,6 +14,7 @@ import { Toast, useToast } from "@/components/ui/toast"
 // API 함수 import
 import { loginApi, handleApiError } from "@/lib/api"
 import { saveAuthData } from "@/lib/auth"
+import { CONFIG } from "@/lib/config"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -60,7 +61,11 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
+      console.log("로그인 시도:", formData.email)
+      console.log("API 기본 URL:", CONFIG.apiBaseUrl)
+
       const authResponse = await loginApi(formData.email, formData.password)
+      console.log("로그인 성공:", authResponse)
 
       // 인증 데이터 저장
       saveAuthData(authResponse)
@@ -72,6 +77,7 @@ export default function LoginPage() {
         router.push("/")
       }, 1000)
     } catch (error) {
+      console.error("로그인 실패:", error)
       setError(handleApiError(error))
     } finally {
       setLoading(false)

@@ -13,6 +13,7 @@ import { Toast, useToast } from "@/components/ui/toast"
 
 // API 함수 import
 import { registerApi, handleApiError } from "@/lib/api"
+import { CONFIG } from "@/lib/config"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -78,7 +79,11 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
+      console.log("회원가입 시도:", formData.email)
+      console.log("API 기본 URL:", CONFIG.apiBaseUrl)
+
       await registerApi(formData.email, formData.name, formData.password)
+      console.log("회원가입 성공")
 
       showToast("회원가입이 완료되었습니다!", "success")
 
@@ -86,6 +91,7 @@ export default function RegisterPage() {
         router.push("/login?registered=true")
       }, 1000)
     } catch (error) {
+      console.error("회원가입 실패:", error)
       setApiError(handleApiError(error))
     } finally {
       setLoading(false)
